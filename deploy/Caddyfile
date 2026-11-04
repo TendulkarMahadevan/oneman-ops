@@ -1,0 +1,22 @@
+# SITE_ADDRESS is the public hostname (e.g. ops.example.com). Caddy obtains and renews the TLS certificate
+# automatically. With SITE_ADDRESS=localhost it serves local HTTPS with an internal CA for testing.
+{$SITE_ADDRESS:localhost} {
+	encode gzip
+	request_body {
+		max_size 8MB
+	}
+
+	# Direct health endpoint for uptime checks (DB + inference connectivity)
+	@health path /health
+	reverse_proxy @health backend:8000
+
+	# Everything else is the Next.js app, which proxies /api/* to the backend
+	reverse_proxy frontend:3000
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
