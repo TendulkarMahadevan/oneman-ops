@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.db import init_db
 from app.errors import DomainError
-from app.routers import procurement
+from app.routers import invoices, procurement
 from app.state_machine import IllegalTransition
 
 logging.basicConfig(level=logging.INFO)
@@ -41,3 +41,4 @@ async def _illegal(_: Request, exc: IllegalTransition):
 
 
 app.include_router(procurement.router)
+app.include_router(invoices.router)

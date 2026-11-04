@@ -139,3 +139,51 @@ class CompareOut(BaseModel):
     recommended_total: Money
     approval_required: bool
     purchase_order: PurchaseOrderOut | None
+
+
+# ---- invoices --------------------------------------------------------------
+class FlagOut(BaseModel):
+    code: str
+    message: str
+
+
+class PaymentOut(ORM):
+    reference: str
+    amount: Money
+    currency: str
+    simulated: bool
+    created_at: UTCDateTime
+
+
+class InvoiceSummary(ORM):
+    id: int
+    status: str
+    filename: str | None
+    vendor_name: str | None
+    invoice_number: str | None
+    po_number: str | None
+    total: Money | None
+    currency: str | None
+    confidence: float | None
+    flags: list[str] | None
+    created_at: UTCDateTime
+
+
+class InvoiceDetail(InvoiceSummary):
+    invoice_date: str | None
+    line_items: list[dict] | None
+    extraction_error: str | None
+    flag_details: list[FlagOut]
+    exception_summary: str | None
+    exception_summary_source: str | None
+    decision_reason: str | None
+    purchase_order: PurchaseOrderOut | None
+    payment: PaymentOut | None
+    raw_text: str | None
+    timeline: list[AuditOut]
+
+
+class DecisionIn(BaseModel):
+    decision: str = Field(pattern="^(approve|reject)$")
+    actor: str = Field(min_length=1, max_length=80)
+    reason: str = Field(default="", max_length=1000)

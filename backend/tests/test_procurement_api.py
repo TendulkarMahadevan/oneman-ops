@@ -181,7 +181,7 @@ def test_seed_is_idempotent_and_produces_pos(db):
 
     first = seed(db)
     second = seed(db)
-    assert first == {"vendors": 6, "requests": 3} and second == {"vendors": 0, "requests": 0}
+    assert first == {"vendors": 6, "requests": 3, "invoices": 4} and second == {"vendors": 0, "requests": 0, "invoices": 0}
     assert db.scalar(select(func.count()).select_from(Vendor)) == 6
     pos = db.scalars(select(PurchaseOrder).order_by(PurchaseOrder.id)).all()
     assert [p.po_number for p in pos] == ["PO-1001", "PO-1002", "PO-1003"]

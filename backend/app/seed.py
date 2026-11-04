@@ -11,8 +11,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import SessionLocal, init_db
-from app.models import PurchaseRequest, Vendor
+from datetime import date
+from decimal import ROUND_HALF_UP
+
+from app.extraction import ExtractedInvoice, LineItem
+from app.models import Invoice, PurchaseOrder, PurchaseRequest, Vendor
 from app.schemas import QuoteIn, RequestCreate
+from app.services import invoices as inv_svc
 from app.services import procurement as svc
 
 VENDORS = [
@@ -40,8 +45,39 @@ REQUESTS = [
 ]
 
 
+# key, PO, invoice number, quantity delta vs PO, unit-price multiplier vs PO
+INVOICES = [
+    ("clean", "PO-1003", "INV-CC-20411", 0, Decimal("1")),
+    ("price_mismatch", "PO-1002", "INV-SW-88103", 0, Decimal("1.08")),
+    ("qty_mismatch", "PO-1001", "INV-NW-33017", -2, Decimal("1")),
+    ("duplicate", "PO-1003", "INV-CC-20411", 0, Decimal("1")),
+]
+
+
+def _seed_invoices(db: Session) -> int:
+    count = 0
+    for key, po_number, number, qty_delta, price_mult in INVOICES:
+        if db.scalar(select(Invoice).where(Invoice.filename == f"seed:{key}")):
+            continue
+        po = db.scalar(select(PurchaseOrder).where(PurchaseOrder.po_number == po_number))
+        if po is None:
+            continue
+        qty = po.quantity + qty_delta
+        price = (po.unit_price * price_mult).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        ex = ExtractedInvoice(
+            vendor=po.vendor.name, invoice_number=number, date=date.today().isoformat(), po_number=po_number,
+            line_items=[LineItem(description=po.item, qty=Decimal(qty), unit_price=price)],
+            total=(price * qty).quantize(Decimal("0.01")), currency="USD", confidence=0.97)
+        text = (f"INVOICE {number}\nFrom: {po.vendor.name}\nPO: {po_number}\n{po.item}: {qty} x {price}\n"
+                f"Total: {ex.total} USD")
+        inv = inv_svc.register_extracted(db, ex, text, f"seed:{key}", actor="seed")
+        inv_svc.match(db, inv)
+        count += 1
+    return count
+
+
 def seed(db: Session) -> dict[str, int]:
-    created = {"vendors": 0, "requests": 0}
+    created = {"vendors": 0, "requests": 0, "invoices": 0}
     for name, category, rating, email in VENDORS:
         if not db.scalar(select(Vendor).where(Vendor.name == name)):
             db.add(Vendor(name=name, category=category, rating=rating, email=email))
@@ -61,6 +97,7 @@ def seed(db: Session) -> dict[str, int]:
         if req.status == "awaiting_approval":
             svc.approve(db, req, "seed-approver", None, "Seeded demo approval")
         created["requests"] += 1
+    created["invoices"] = _seed_invoices(db)
     return created
 
 
