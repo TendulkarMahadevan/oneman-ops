@@ -126,6 +126,7 @@ class RequestDetail(RequestSummary):
     recommended_quote_id: int | None
     rejection_reason: str | None
     approval_threshold_usd: Money
+    score_weights: dict[str, float]
     quotes: list[QuoteOut]
     purchase_order: PurchaseOrderOut | None
     timeline: list[AuditOut]
@@ -187,3 +188,32 @@ class DecisionIn(BaseModel):
     decision: str = Field(pattern="^(approve|reject)$")
     actor: str = Field(min_length=1, max_length=80)
     reason: str = Field(default="", max_length=1000)
+
+
+# ---- dashboard / approvals -------------------------------------------------
+class DashboardOut(BaseModel):
+    open_requests: int
+    awaiting_approval: int
+    flagged_invoices: int
+    spend_this_month_usd: Money
+    avg_cycle_time_hours: float | None
+    invoices_total: int
+    touchless_invoices: int
+    recent_activity: list[AuditOut]
+
+
+class ApprovalItem(BaseModel):
+    kind: str  # request | invoice
+    id: int
+    title: str
+    amount_usd: Money | None
+    reason: str
+    flags: list[str]
+    created_at: UTCDateTime
+
+
+class HealthOut(BaseModel):
+    status: str
+    database: str
+    llm: str
+    llm_configured: bool

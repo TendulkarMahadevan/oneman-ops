@@ -38,6 +38,8 @@ def request_detail(db: Session, req: PurchaseRequest) -> RequestDetail:
         created_at=req.created_at, justification=req.justification,
         recommended_quote_id=req.recommended_quote_id, rejection_reason=req.rejection_reason,
         approval_threshold_usd=get_settings().approval_required_over_usd,
+        score_weights={"price": get_settings().score_weight_price, "lead_time": get_settings().score_weight_lead_time,
+                       "rating": get_settings().score_weight_rating},
         quotes=[quote_out(req, q) for q in _sorted_quotes(req)],
         purchase_order=po_out(req.purchase_order) if req.purchase_order else None,
         timeline=[AuditOut.model_validate(a) for a in procurement.timeline(db, req)],

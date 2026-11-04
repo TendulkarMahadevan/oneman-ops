@@ -219,7 +219,7 @@ def _issue_po(db: Session, req: PurchaseRequest, quote: Quote, actor: str) -> Pu
     db.add(po)
     db.flush()
     po.po_number = _next_po_number(po.id)
-    audit_po(db, po, actor, "po_created",
+    audit_po(db, po, actor, "po_issued",
              f"{po.po_number}: {po.quantity} x {po.item} @ {po.unit_price} = {po.total} USD with {quote.vendor.name}")
     transition(db, req, "po_created", actor, "po_created", f"{po.po_number} issued to {quote.vendor.name}")
     return po

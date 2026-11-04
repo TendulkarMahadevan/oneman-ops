@@ -44,7 +44,7 @@ def test_full_flow_over_threshold(client, vendors, db):
 
     actions = [(t["actor"], t["action"]) for t in d["timeline"]]
     assert actions == [("dana", "request_created"), ("requester", "quotes_added"), ("system", "quotes_compared"),
-                       ("system", "approval_required"), ("carol", "approved"), ("carol", "po_created"),
+                       ("system", "approval_required"), ("carol", "approved"), ("carol", "po_issued"),
                        ("carol", "po_created")]
     assert db.query(AuditLog).count() == 7
 
