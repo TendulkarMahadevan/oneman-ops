@@ -116,3 +116,7 @@ scripts/    smoke_test.py, make_sample_invoices.py, capture_screenshots.js
 ```
 
 Design decisions and resolved ambiguities: [docs/DECISIONS.md](docs/DECISIONS.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
