@@ -122,7 +122,9 @@ class _RationaleSet(BaseModel):
 RATIONALE_SYSTEM = (
     "You are a procurement analyst. You are given vendor quotes that have ALREADY been scored and ranked by "
     "a deterministic rule engine. Do not change scores, ranks or numbers. For each quote write 2-3 plain "
-    "sentences explaining its strengths and weaknesses relative to the others, using only the numbers given. "
+    "sentences explaining its strengths and weaknesses relative to the others, using only the facts given. "
+    "Refer to each quote by VENDOR NAME only. Never mention quote ids, 'quote 12'-style labels, or internal sub-scores. "
+    "Quote prices in dollars with two decimals and lead times in days. "
     'Return ONLY JSON: {"rationales":[{"quote_id":int,"rationale":str}]} with exactly one entry per quote.'
 )
 
@@ -141,10 +143,12 @@ def _template_rationale(q: Quote, req: PurchaseRequest, n: int, cheapest: Quote,
 
 
 def _rationales(req: PurchaseRequest, ranked: list[Quote]) -> tuple[dict[int, str], str]:
+    cheapest = min(q.unit_price for q in ranked)
     payload = [
-        {"quote_id": q.id, "vendor": q.vendor.name, "rank": q.rank, "score": q.score,
-         "unit_price_usd": str(q.unit_price), "lead_time_days": q.lead_time_days,
-         "vendor_rating_out_of_5": q.vendor.rating, "score_breakdown": q.score_breakdown}
+        {"quote_id": q.id, "vendor": q.vendor.name, "rank": q.rank, "overall_score_0_to_1": q.score,
+         "unit_price_usd": f"{q.unit_price:.2f}",
+         "price_vs_cheapest_pct": round(float((q.unit_price / cheapest - 1) * 100), 1),
+         "lead_time_days": q.lead_time_days, "vendor_rating_out_of_5": q.vendor.rating}
         for q in ranked
     ]
     user = (f"Request: {req.quantity} x {req.item}. Weights: price/lead-time/rating as configured.\n"

@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from typing import TypeVar
 
 import httpx
@@ -75,17 +76,33 @@ def chat_json(system: str, user: str, schema: type[T]) -> T:
     raise LLMError(f"LLM output invalid after retry: {last_error}")
 
 
+_PING_TTL_SECONDS = 60
+_ping_cache: tuple[float, tuple[bool, str]] | None = None
+
+
 def ping() -> tuple[bool, str]:
-    """Connectivity check for /health. Cheap models endpoint call; never raises."""
+    """Connectivity AND credential check for /health. Never raises.
+
+    Uses a 1-token authenticated chat call (the /models listing is public and would report "ok" for a bad
+    key). The result is cached briefly so frequent health polling does not spend tokens.
+    """
+    global _ping_cache
     s = get_settings()
     if not s.llm_configured:
         return False, "not_configured"
+    now = time.monotonic()
+    if _ping_cache and now - _ping_cache[0] < _PING_TTL_SECONDS:
+        return _ping_cache[1]
     try:
-        r = httpx.get(
-            f"{s.vultr_inference_base_url.rstrip('/')}/models",
+        r = httpx.post(
+            f"{s.vultr_inference_base_url.rstrip('/')}/chat/completions",
             headers={"Authorization": f"Bearer {s.vultr_inference_api_key}"},
-            timeout=8,
+            json={"model": s.vultr_inference_model, "max_tokens": 1, "temperature": 0,
+                  "messages": [{"role": "user", "content": "ping"}]},
+            timeout=15,
         )
-        return (r.status_code < 400), f"http_{r.status_code}"
+        result = (r.status_code < 400), (f"http_{r.status_code}" if r.status_code >= 400 else "ok")
     except httpx.HTTPError as exc:
-        return False, type(exc).__name__
+        result = False, type(exc).__name__
+    _ping_cache = (now, result)
+    return result

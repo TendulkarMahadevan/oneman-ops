@@ -185,3 +185,19 @@ def test_seed_is_idempotent_and_produces_pos(db):
     assert db.scalar(select(func.count()).select_from(Vendor)) == 6
     pos = db.scalars(select(PurchaseOrder).order_by(PurchaseOrder.id)).all()
     assert [p.po_number for p in pos] == ["PO-1001", "PO-1002", "PO-1003"]
+
+
+def test_rationale_prompt_uses_names_not_internal_ids(client, vendors, monkeypatch):
+    seen = {}
+
+    def fake(system, user, schema):
+        seen["system"], seen["user"] = system, user
+        raise llm.LLMError("stop")
+
+    monkeypatch.setattr(llm, "chat_json", fake)
+    rid = new_request(client)["id"]
+    quotes_for(client, rid, vendors)
+    client.post(f"/procurement/requests/{rid}/compare")
+    assert "VENDOR NAME only" in seen["system"] and "Never mention quote ids" in seen["system"]
+    assert "'vendor': 'Alpha IT'" in seen["user"] and "'unit_price_usd': '1000.00'" in seen["user"]
+    assert "score_breakdown" not in seen["user"]

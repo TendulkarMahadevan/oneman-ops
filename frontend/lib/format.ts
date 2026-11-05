@@ -8,3 +8,7 @@ export const FLAG_HELP: Record<string, string> = {
   UNKNOWN_PO: "No matching PO", DUPLICATE_INVOICE: "Already received", LOW_CONFIDENCE: "Extraction uncertain",
   VENDOR_MISMATCH: "Vendor differs from PO", CURRENCY_MISMATCH: "Currency differs from PO", SUSPICIOUS_CONTENT: "Text addresses an AI",
 };
+export const actionLabel = (s: string) => {
+  const t = label(s).replace(/\bpo\b/g, "PO");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};

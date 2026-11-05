@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ReactNode } from "react";
-import { FLAG_HELP, label, when } from "@/lib/format";
+import { FLAG_HELP, actionLabel, label, when } from "@/lib/format";
 import type { Audit } from "@/lib/types";
 
 export function Loading({ what = "data" }: { what?: string }) {
@@ -49,7 +49,7 @@ export function Timeline({ items, linkEntity }: { items: Audit[]; linkEntity?: b
       {items.map((a) => (
         <li key={a.id}>
           <div className="tl-head">
-            <span className="tl-action">{label(a.action)}</span>
+            <span className="tl-action">{actionLabel(a.action)}</span>
             <span className="tl-actor">{a.actor}</span>
             <time>{when(a.created_at)}</time>
           </div>

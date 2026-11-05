@@ -6,7 +6,7 @@ Built for the lablab.ai **Vultr Agent Rush**, Challenge 2 (Powering the Future o
 
 > **Rules decide, the LLM explains and extracts.** Scoring, tolerances, thresholds, totals and status changes are deterministic, unit-tested Python. The LLM reads invoices and writes explanations, and its output is validated as untrusted input.
 
-- Public URL: `https://<your-domain>` (fill in after deploy, see [docs/DEPLOY.md](docs/DEPLOY.md))
+- Public URL: https://207-246-110-38.sslip.io (Vultr Cloud Compute VM; may be taken down after judging. Deploy steps: [docs/DEPLOY.md](docs/DEPLOY.md))
 - Demo video: _link to be added at submission_
 
 ## What it does
@@ -85,12 +85,13 @@ Be skeptical of anything not on this list.
 
 | Check | Status |
 |---|---|
-| `pytest`: scoring, matching (every flag and boundary), state machine, LLM validation/retry, procurement and invoice APIs, seed | 75 tests passing |
+| `pytest`: scoring, matching (every flag and boundary), state machine, LLM validation/retry, procurement and invoice APIs, seed, health check | 77 tests passing |
 | Seeded invoices give clean=paid, price/qty/duplicate=flagged with the expected single flag | Verified (tests + local run) |
-| Full smoke test (`scripts/smoke_test.py`) through the Next.js `/api` proxy against local PostgreSQL 16 | Passed, **using a local OpenAI-compatible stub in place of Vultr inference** |
 | UI journey in a real browser (create, simulate, compare, approve, upload, decide, audit filter), mobile width has no horizontal overflow | Verified locally |
-| Calls to **live Vultr Serverless Inference** (real extraction quality, model JSON compliance) | **Not yet tested** |
-| `docker compose build/up` and the **Vultr VM deployment**, HTTPS on a real domain | **Not yet done**; compose file validates, Docker images not built in the authoring environment |
+| Deployed on a **Vultr Cloud Compute VM** (Ubuntu 24.04, 2 vCPU / 4 GB) with Docker Compose, Caddy HTTPS on a public hostname, ufw allowing 22/80/443 | Done; all four containers healthy |
+| `scripts/smoke_test.py` against the **public URL** with **live Vultr Serverless Inference** (`qwen3.8-27b`): 24 checks (PO flow, 4 sample invoices incl. price, quantity and prompt-injection cases, duplicate, human decision, audit) | Passed, 15 s end to end (one run, on this deployment) |
+| Rationale text written by the model (not the template fallback) | Observed in the UI and audit log on the deployment |
+| Extraction accuracy beyond the four sample files, other models, scanned PDFs | **Not evaluated** |
 
 ## Limitations
 

@@ -23,3 +23,6 @@ Ambiguities in the brief, resolved with the simplest defensible option.
 19. **Public routing:** Caddy sends `/health` to the backend and everything else to Next.js, which proxies `/api/*` to the backend. The backend's `/docs` and raw API are not exposed publicly.
 20. **Seed is a command, not automatic.** `docker compose exec backend python -m app.seed` loads demo data; the schema itself is created on backend start. No manual SQL is needed anywhere.
 21. **Phases 4-5 prepared, not executed:** deploy files, bootstrap script, smoke test and submission kit are written; running them needs a Vultr account, domain and recorded video.
+22. **`/health` makes a real authenticated 1-token call** (cached 60 s). The public `/models` listing returns 200 even for a bad key, so it cannot prove credentials work.
+23. **Rationale prompts use vendor names, not ids**, after the first live run showed the model quoting internal ids ("Quote 14").
+24. **Deployed model:** `qwen3.8-27b` on Vultr Serverless Inference. It returns its reasoning in a separate field, so `content` stays clean JSON; JSON mode was accepted.

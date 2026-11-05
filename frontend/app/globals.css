@@ -92,7 +92,7 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font
 .timeline li { position: relative; padding: 0 0 16px 16px; }
 .timeline li::before { content: ""; position: absolute; left: -23px; top: 6px; width: 10px; height: 10px; background: var(--paper); border: 2px solid var(--green); border-radius: 50%; }
 .tl-head { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
-.tl-action { font-weight: 700; text-transform: capitalize; } .tl-actor { color: var(--green); font-size: 13px; }
+.tl-action { font-weight: 700; } .tl-actor { color: var(--green); font-size: 13px; }
 .tl-head time { color: var(--muted); font-size: 12px; margin-left: auto; }
 .tl-detail { color: var(--muted); font-size: 14px; word-break: break-word; } .tl-link { font-size: 12px; }
 
